@@ -1,14 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+import { Auth } from '@supabase/ui';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { supabaseClient } from './utils/supabase';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Auth.UserContextProvider supabaseClient={supabaseClient}>
+      <App />
+    </Auth.UserContextProvider>
   </React.StrictMode>,
-  document.getElementById('root')
+  document.getElementById('root'),
 );
 
 // If you want to start measuring performance in your app, pass a function
