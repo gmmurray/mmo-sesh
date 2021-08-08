@@ -1,14 +1,36 @@
 import { Fragment, useCallback } from 'react';
+import {
+  Route,
+  BrowserRouter as Router,
+  Switch,
+  Redirect,
+} from 'react-router-dom';
+import Home from './pages/home/home';
+import NewItem from './pages/sesh/items/new-item';
+import ViewSesh from './pages/sesh/view-sesh';
 import { supabaseClient } from './utils/supabase';
 
 const AuthenticatedApp = () => {
   const handleSignout = useCallback(() => supabaseClient.auth.signOut(), []);
   return (
     <Fragment>
-      <div>
-        <button onClick={handleSignout}>Sign out</button>
-      </div>
-      <div>im in</div>
+      <Router>
+        <div>
+          <button onClick={handleSignout}>Sign out</button>
+        </div>
+        <Switch>
+          <Route path="/" exact>
+            <Home />
+          </Route>
+          <Route path="/sesh/items/new">
+            <NewItem />
+          </Route>
+          <Route path="/sesh/view/:id">
+            <ViewSesh />
+          </Route>
+          <Redirect to="/" />
+        </Switch>
+      </Router>
     </Fragment>
   );
 };
