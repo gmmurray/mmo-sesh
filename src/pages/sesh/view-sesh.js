@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Redirect, useParams } from 'react-router-dom';
 import {
   createNewItem,
+  deleteItem,
   toggleCompletionStatus,
 } from '../../backend/queries/session-items';
 import { getSessionWithItems } from '../../backend/queries/sessions';
@@ -25,6 +26,7 @@ const ViewSesh = () => {
     data: null,
     isLoading: false,
     isUpdating: false,
+    isDeleting: false,
   });
 
   const [newItem, setNewItem] = useState({
@@ -107,6 +109,28 @@ const ViewSesh = () => {
     [session.data?.session_items],
   );
 
+  const handleItemDeletion = useCallback(
+    async itemId => {
+      setSession(state => ({ ...state, isDeleting: true }));
+      try {
+        const { error } = await deleteItem(itemId);
+        if (error) throw error;
+        const updatedItems = session.data.session_items.filter(
+          item => item.id !== itemId,
+        );
+        setSession(state => ({
+          ...state,
+          data: { ...state.data, session_items: updatedItems },
+        }));
+      } catch (error) {
+        alert(error.error_description || error.message);
+      } finally {
+        setSession(state => ({ ...state, isDeleting: false }));
+      }
+    },
+    [session.data?.session_items],
+  );
+
   useEffect(() => {
     const initialize = async () => {
       await Promise.all([loadSession()]);
@@ -118,36 +142,47 @@ const ViewSesh = () => {
     return <Redirect to="/" />;
   else if (session.isLoading) return <div>Loading...</div>;
 
+  const disableActions =
+    newItem.isLoading ||
+    session.isLoading ||
+    session.isUpdating ||
+    session.isDeleting;
   return (
     <div>
       <h4>View Sesh {session.data?.started_at}</h4>
-      {session.data?.session_items?.length > 0 && (
+      <div>
+        <h5>Weekly</h5>
+        <hr style={{ border: '1px solid black' }} />
+      </div>
+      <div>
+        <h5>Daily</h5>
+        <hr style={{ border: '1px solid black' }} />
+      </div>
+      <div>
+        <h5>Sesh Items</h5>
         <div>
-          <div>
-            {!newItem.isActive ? (
-              <button onClick={handleNewItemToggle}>create item +</button>
-            ) : (
-              <Fragment>
-                <input
-                  type="text"
-                  value={newItem.value}
-                  placeholder="create item +"
-                  onChange={handleNewItemChange}
-                  disabled={newItem.isLoading}
-                />
-                <button
-                  onClick={handleNewItemSave}
-                  disabled={newItem.isLoading}
-                >
-                  +
-                </button>
-                <button onClick={handleNewItemToggle}>x</button>
-              </Fragment>
-            )}
-          </div>
-          {session.data.session_items.map(item => (
+          {!newItem.isActive ? (
+            <button onClick={handleNewItemToggle}>create item +</button>
+          ) : (
+            <Fragment>
+              <input
+                type="text"
+                value={newItem.value}
+                placeholder="create item +"
+                onChange={handleNewItemChange}
+                disabled={disableActions}
+              />
+              <button onClick={handleNewItemSave} disabled={disableActions}>
+                +
+              </button>
+              <button onClick={handleNewItemToggle}>x</button>
+            </Fragment>
+          )}
+        </div>
+        {session.data?.session_items?.length > 0 &&
+          session.data.session_items.map(item => (
             <Fragment key={item.id}>
-              <hr />
+              <hr style={{ border: '1px solid black' }} />
               <div>
                 <p>{item.is_complete ? 'Complete' : 'Incomplete'}</p>
                 <p>{item.content}</p>
@@ -156,16 +191,21 @@ const ViewSesh = () => {
                     onClick={() =>
                       handleToggleItemCompletion(item.id, item.is_complete)
                     }
-                    disabled={session.isUpdating}
+                    disabled={disableActions}
                   >
                     toggle completion
+                  </button>
+                  <button
+                    onClick={() => handleItemDeletion(item.id)}
+                    disabled={disableActions}
+                  >
+                    x
                   </button>
                 </p>
               </div>
             </Fragment>
           ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

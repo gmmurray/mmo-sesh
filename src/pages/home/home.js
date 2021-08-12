@@ -1,15 +1,13 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Auth } from '@supabase/ui';
 import Select from 'react-select';
-import { getGames } from '../../backend/queries/games';
 import {
   createSession,
   getIncompleteSessions,
 } from '../../backend/queries/sessions';
 import { useHistory } from 'react-router-dom';
-
-const getGameSelectOptions = games =>
-  games.map(({ id, image_url, name }) => ({ value: id, label: name }));
+import { useRecoilValue } from 'recoil';
+import { gameState, getGameSelectOptions } from '../../recoil/games';
 
 const INCOMPLETE_SESH_LIMIT = 3;
 
@@ -18,7 +16,7 @@ const Home = () => {
   let history = useHistory();
   const [isInitializing, setIsInitializing] = useState(true);
 
-  const [gameOptions, setGameOptions] = useState({ data: [], loading: false });
+  const gamesState = useRecoilValue(gameState);
   const [selectedGame, setSelectedGame] = useState(null);
 
   const [isCreateLoading, setIsCreateLoading] = useState(false);
@@ -26,19 +24,6 @@ const Home = () => {
     data: [],
     loading: false,
   });
-
-  const loadGameOptions = useCallback(async () => {
-    setGameOptions(state => ({ ...state, loading: true }));
-    try {
-      const { data, error } = await getGames();
-      setGameOptions(state => ({ ...state, data: getGameSelectOptions(data) }));
-      if (error) throw error;
-    } catch (error) {
-      alert(error.error_description || error.message);
-    } finally {
-      setGameOptions(state => ({ ...state, loading: false }));
-    }
-  }, []);
 
   const loadIncompleteSessions = useCallback(async () => {
     setIncompleteSessions(state => ({ ...state, loading: true }));
@@ -73,7 +58,7 @@ const Home = () => {
 
   useEffect(() => {
     const initialize = async () => {
-      await Promise.all([loadGameOptions(), loadIncompleteSessions()]);
+      await Promise.all([loadIncompleteSessions()]);
     };
 
     initialize().then(() => setIsInitializing(false));
@@ -109,11 +94,11 @@ const Home = () => {
           <Select
             value={selectedGame}
             onChange={selected => setSelectedGame(selected)}
-            options={gameOptions.data}
+            options={getGameSelectOptions(gamesState.options)}
           />
           <button
             onClick={handleNewSesh}
-            disabled={gameOptions.loading || isCreateLoading}
+            disabled={gameState.isLoading || isCreateLoading}
           >
             Click
           </button>

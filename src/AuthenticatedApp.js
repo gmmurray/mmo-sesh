@@ -6,7 +6,6 @@ import {
   Redirect,
 } from 'react-router-dom';
 import Home from './pages/home/home';
-import NewItem from './pages/sesh/items/new-item';
 import ViewSesh from './pages/sesh/view-sesh';
 import { supabaseClient } from './utils/supabase';
 
@@ -21,9 +20,6 @@ const AuthenticatedApp = () => {
         <Switch>
           <Route path="/" exact>
             <Home />
-          </Route>
-          <Route path="/sesh/items/new">
-            <NewItem />
           </Route>
           <Route path="/sesh/view/:id">
             <ViewSesh />
