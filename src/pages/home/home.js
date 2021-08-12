@@ -90,7 +90,7 @@ const Home = () => {
           <ul>
             {incompleteSessions.data.map(
               ({ id, game_id, started_at, session_items }) => (
-                <li key={id}>
+                <li key={id} onClick={() => history.push(`/sesh/view/${id}`)}>
                   {started_at}
                   <ul>
                     {(session_items || []).map(({ id, content }) => (

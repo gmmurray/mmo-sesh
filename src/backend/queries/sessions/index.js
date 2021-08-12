@@ -14,3 +14,12 @@ export const getIncompleteSessions = async limit => {
     .eq(`${sessionItemsTable}.is_complete`, false)
     .limit(limit, { foreignTable: sessionItemsTable });
 };
+
+export const getSessionWithItems = async id =>
+  await supabaseClient
+    .from(sessionsTable)
+    .select(
+      `id, started_at, ${sessionItemsTable}(id, is_complete, content, created_at)`,
+    )
+    .eq('id', id)
+    .order('created_at', { foreignTable: sessionItemsTable, ascending: false });
